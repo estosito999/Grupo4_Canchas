@@ -1,17 +1,12 @@
 import {
   IsEmail,
-  IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
-
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  CLIENT = 'CLIENT',
-  OWNER = 'OWNER',
-}
+import { UserRole } from '../entities/user.entity';
 
 export class CreateUserDto {
   @IsString()
@@ -31,7 +26,10 @@ export class CreateUserDto {
   @IsOptional()
   phone?: string;
 
-  @IsEnum(UserRole, { message: 'El rol debe ser ADMIN, CLIENT u OWNER' })
+  // El registro público solo permite Cliente o Propietario (ADMIN lo asigna un administrador)
+  @IsIn([UserRole.CLIENT, UserRole.OWNER], {
+    message: 'El rol debe ser CLIENT u OWNER',
+  })
   @IsOptional()
   role?: UserRole;
 }

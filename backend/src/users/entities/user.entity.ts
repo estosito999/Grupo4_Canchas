@@ -1,33 +1,46 @@
+// src/users/entities/user.entity.ts
+import { Exclude } from 'class-transformer';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Column, CreateDateColumn, Entity,
+  PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
+
+export enum UserRole {
+  CLIENT = 'CLIENT',
+  ADMIN = 'ADMIN',
+  OWNER = 'OWNER',
+}
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 150, unique: true })
+  @Column({ unique: true, length: 100 })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Exclude()
+  @Column()
   password: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phone: string;
+  @Column({ length: 20, nullable: true })
+  phone?: string;
 
-  @Column({ type: 'varchar', length: 20, default: 'CLIENT' })
-  role: string; // Ej: 'ADMIN', 'CLIENT', 'OWNER'
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
+  role: UserRole;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ default: true })
   isActive: boolean;
+
+  @Exclude()
+  @Column({ default: 0 })
+  failedLoginAttempts: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lockedUntil?: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;
