@@ -76,4 +76,22 @@ export class UsersService {
     await this.userRepository.save(user);
     return { message: 'Usuario inhabilitado correctamente' };
   }
+
+  private readonly MAX_ATTEMPTS = 5;
+  private readonly LOCK_MINUTES = 15;
+
+  async registerFailedAttempt(user: User) {
+    user.failedLoginAttempts += 1;
+    if (user.failedLoginAttempts >= this.MAX_ATTEMPTS) {
+      user.lockedUntil = new Date(Date.now() + this.LOCK_MINUTES * 60 * 1000);
+      user.failedLoginAttempts = 0;
+    }
+    await this.userRepository.save(user);
+  }
+
+  async resetLoginAttempts(user: User) {
+    user.failedLoginAttempts = 0;
+    user.lockedUntil = null;
+    await this.userRepository.save(user);
+  }
 }
