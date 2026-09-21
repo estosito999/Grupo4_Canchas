@@ -1,5 +1,6 @@
 // src/users/entities/user.entity.ts
 import { Exclude } from 'class-transformer';
+import { ApiHideProperty } from '@nestjs/swagger';
 import {
   Column, CreateDateColumn, Entity,
   PrimaryGeneratedColumn, UpdateDateColumn,
@@ -22,6 +23,7 @@ export class User {
   @Column({ unique: true, length: 100 })
   email: string;
 
+  @ApiHideProperty()
   @Exclude()
   @Column()
   password: string;
@@ -35,6 +37,7 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  @ApiHideProperty()
   @Exclude()
   @Column({ default: 0 })
   failedLoginAttempts: number;
