@@ -2,22 +2,26 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
   private readonly SALT_ROUNDS = 10;
+  private readonly MAX_ATTEMPTS = 5;
+  private readonly LOCK_MINUTES = 15;
 
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const { email, password } = createUserDto;
@@ -48,7 +52,7 @@ export class UsersService {
     return user;
   }
 
-  // Lo usará el AuthModule para el login
+  // Lo usa el AuthModule para el login
   async findByEmail(email: string) {
     return await this.userRepository.findOne({ where: { email } });
   }
@@ -77,9 +81,21 @@ export class UsersService {
     return { message: 'Usuario inhabilitado correctamente' };
   }
 
-  private readonly MAX_ATTEMPTS = 5;
-  private readonly LOCK_MINUTES = 15;
+  // Cambio de contraseña del propio usuario (perfil)
+  async changePassword(id: string, dto: ChangePasswordDto) {
+    const user = await this.findOne(id);
 
+    const ok = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!ok) {
+      throw new UnauthorizedException('La contraseña actual es incorrecta');
+    }
+
+    user.password = await bcrypt.hash(dto.newPassword, this.SALT_ROUNDS);
+    await this.userRepository.save(user);
+    return { message: 'Contraseña actualizada correctamente' };
+  }
+
+  // Bloqueo por intentos fallidos de login
   async registerFailedAttempt(user: User) {
     user.failedLoginAttempts += 1;
     if (user.failedLoginAttempts >= this.MAX_ATTEMPTS) {
@@ -95,11 +111,10 @@ export class UsersService {
     await this.userRepository.save(user);
   }
 
+  // Lo usa el script seed-admin.ts
   async setRole(id: string, role: UserRole) {
     const user = await this.findOne(id);
     user.role = role;
     return await this.userRepository.save(user);
   }
-
-
 }
