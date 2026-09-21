@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -17,7 +17,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto) {
     const { email, password } = createUserDto;
@@ -94,4 +94,12 @@ export class UsersService {
     user.lockedUntil = null;
     await this.userRepository.save(user);
   }
+
+  async setRole(id: string, role: UserRole) {
+    const user = await this.findOne(id);
+    user.role = role;
+    return await this.userRepository.save(user);
+  }
+
+
 }
