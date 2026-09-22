@@ -1,5 +1,7 @@
 import {
   Controller,
+  Query,
+  Res,
   Get,
   Post,
   Put,
@@ -12,7 +14,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import type { Request, Response } from 'express';
+import { VerificationService } from '../mail/verification.service';
 
 import { AuthService } from './auth.service';
 import { UsersService } from './users.service';
@@ -59,7 +62,24 @@ export class UsersController {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly verification: VerificationService) {}
+
+  @Post('reenviar-verificacion')
+  @UseGuards(JwtAuthGuard)
+  reenviar(@Req() req: RequestWithUser) {
+    return this.verification.send(req.user.id);
+  }
+
+  @Get('verificar-correo')
+  async verificar(@Query('token') token: string, @Res() res: Response) {
+    let message = 'Correo verificado';
+    let status = 200;
+    try { await this.verification.verify(token); }
+    catch { message = 'Enlace inválido, vencido o ya utilizado. Solicita otro desde tu perfil.'; status = 400; }
+    res.status(status).set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer').type('html').send(
+      '<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verificación de correo</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#ecfdf5;font-family:Arial;color:#064e3b"><h1 style="padding:24px;text-align:center">' + message + '</h1></body></html>'
+    );
+  }
 
   @Post('registro')
   registro(@Body() createUserDto: CreateUserDto) {

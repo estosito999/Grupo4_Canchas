@@ -8,6 +8,15 @@ import {
 
 @Entity('users')
 export class User {
+  @Column({ default: false })
+  correo_verificado: boolean;
+
+  @Column({ type: 'varchar', nullable: true, select: false })
+  verificacion_hash: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true, select: false })
+  verificacion_expira: Date | null;
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

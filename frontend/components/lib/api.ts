@@ -19,6 +19,7 @@ export type Usuario = {
   celular: string;
   rol: Rol;
   estado?: string;
+  correo_verificado?: boolean;
 };
 
 export type AuthResponse = {

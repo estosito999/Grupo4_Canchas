@@ -9,6 +9,7 @@ import { Repository, ILike } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { VerificationService } from '../mail/verification.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly verification: VerificationService,
   ) {}
 
   // RF04: Envío de correo de confirmación
@@ -44,7 +46,7 @@ export class UsersService {
     const savedUser = await this.userRepository.save(user);
 
     // Ejecutar envío de correo tras registro exitoso (RF04)
-    await this.sendConfirmationEmail(savedUser.correo);
+    try { await this.verification.send(savedUser.id); } catch { /* Puede reenviarse desde el perfil. */ }
 
     return savedUser;
   }
@@ -80,6 +82,11 @@ export class UsersService {
     if (updateUserDto.password) {
       user.password_hash = await bcrypt.hash(updateUserDto.password, 10);
       delete updateUserDto.password;
+    }
+    if (updateUserDto.correo && updateUserDto.correo !== user.correo) {
+      user.correo_verificado = false;
+      user.verificacion_hash = null;
+      user.verificacion_expira = null;
     }
     Object.assign(user, updateUserDto);
     return await this.userRepository.save(user);

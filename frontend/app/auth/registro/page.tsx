@@ -2,13 +2,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ApiError,
-  isNetworkError,
   registrarUsuario,
   registroSchema,
   toUsuarioFromRegistro,
@@ -22,7 +20,6 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export default function RegistroPage() {
-  const router = useRouter();
   const { login } = useAuth();
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -63,26 +60,18 @@ export default function RegistroPage() {
     try {
       const response = await registrarUsuario(payload);
       const usuario = response.usuario ?? toUsuarioFromRegistro(values);
-      if (response.token || response.usuario) {
+      if (response.token) {
         login(usuario, response.token);
       }
       setSuccess(
-        "Cuenta creada correctamente. Te enviamos una notificación al correo (RF04). Serás redirigido al inicio de sesión.",
+        response.message ?? "Cuenta creada. Revisa tu correo para verificar tu dirección.",
       );
-      window.setTimeout(() => router.push("/auth/login"), 1600);
+      // Mantener visible el resultado del envío; el enlace de inicio de sesión está debajo.
     } catch (error) {
       if (error instanceof ApiError && error.field) {
         setError(error.field as keyof RegistroFormValues, { message: error.message });
       }
 
-      if (isNetworkError(error)) {
-        login(toUsuarioFromRegistro(values), "demo-token");
-        setSuccess(
-          "Validación correcta. El backend no está disponible: se creó una sesión local de demostración (CLIENTE). Revisa el correo cuando el servidor envíe la confirmación (RF04).",
-        );
-        window.setTimeout(() => router.push("/perfil"), 1600);
-        return;
-      }
 
       const message =
         error instanceof ApiError

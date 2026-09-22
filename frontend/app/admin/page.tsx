@@ -130,6 +130,7 @@ const AdminPage: React.FC = () => {
             <tr>
               <th className="py-3 px-4 border-b">Nombre Completo</th>
               <th className="py-3 px-4 border-b">Correo</th>
+              <th className="py-3 px-4 border-b">Verificación</th>
               <th className="py-3 px-4 border-b">Celular</th>
               <th className="py-3 px-4 border-b">Rol</th>
               <th className="py-3 px-4 border-b text-center">Acciones</th>
@@ -140,6 +141,7 @@ const AdminPage: React.FC = () => {
               <tr key={u.id} className="hover:bg-slate-50 border-b last:border-0">
                 <td className="py-3 px-4 font-medium text-slate-900">{`${u.nombres} ${u.apellido_paterno || ''}`}</td>
                 <td className="py-3 px-4 text-slate-600">{u.correo}</td>
+                <td className="py-3 px-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${u.correo_verificado ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{u.correo_verificado ? "Verificado" : "No verificado"}</span></td>
                 <td className="py-3 px-4 text-slate-600">{u.celular}</td>
                 <td className="py-3 px-4">
                   <select

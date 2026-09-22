@@ -9,36 +9,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ApiError,
   iniciarSesion,
-  isNetworkError,
   loginSchema,
   type LoginFormValues,
-  type Rol,
-  type Usuario,
 } from "@/components/lib/api";
 import { useAuth } from "@/components/lib/Navbar";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="mt-1 text-sm text-red-600">{message}</p>;
-}
-
-function demoUsuarioDesdeCorreo(correo: string): Usuario {
-  const normalized = correo.toLowerCase();
-  const rol: Rol = normalized.includes("admin")
-    ? "ADMINISTRADOR"
-    : normalized.includes("empleado")
-      ? "EMPLEADO"
-      : "CLIENTE";
-
-  return {
-    nombres: "Usuario",
-    apellido_paterno: "Demo",
-    apellido_materno: "Local",
-    fecha_nacimiento: "1998-01-15",
-    correo,
-    celular: "999999999",
-    rol,
-  };
 }
 
 export default function LoginPage() {
@@ -65,20 +43,13 @@ export default function LoginPage() {
 
     try {
       const response = await iniciarSesion(values);
-      const usuario = response.usuario ?? demoUsuarioDesdeCorreo(values.correo);
-      login(usuario, response.token ?? "session-token");
+      if (!response.usuario || !response.token) {
+        throw new ApiError("El servidor no devolvió una sesión válida. Inténtalo de nuevo.", 401);
+      }
+      login(response.usuario, response.token);
       setSuccess("Sesión iniciada correctamente. Cargando permisos del rol...");
       router.push("/perfil");
     } catch (error) {
-      if (isNetworkError(error)) {
-        const usuario = demoUsuarioDesdeCorreo(values.correo);
-        login(usuario, "demo-token");
-        setSuccess(
-          `Backend no disponible. Sesión local de demostración como ${usuario.rol}. Usa un correo con "admin" o "empleado" para simular esos roles.`,
-        );
-        window.setTimeout(() => router.push("/perfil"), 900);
-        return;
-      }
 
       const message =
         error instanceof ApiError

@@ -4,7 +4,8 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from '../mail/mail.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { VerificationService } from '../mail/verification.service';
 
 @Injectable()
 export class AuthService {
@@ -12,11 +13,11 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly mailService: MailService,
+    private readonly verification: VerificationService,
   ) {}
 
-  async register(createUserDto: any) {
-    const { correo, password, nombres } = createUserDto;
+  async register(createUserDto: CreateUserDto) {
+    const { correo, password } = createUserDto;
 
     // 1. Verificar si el correo ya existe
     const existingUser = await this.userRepository.findOne({ where: { correo } });
@@ -29,21 +30,25 @@ export class AuthService {
     const password_hash = await bcrypt.hash(password, saltRounds);
 
     // 3. Preparar datos y guardar en PostgreSQL
+    const { password: omittedPassword, ...fields } = createUserDto;
     const userData = {
-      ...createUserDto,
+      ...fields,
       password_hash,
     };
-    delete userData.password;
+
 
     const user = this.userRepository.create(userData);
     const usuarioGuardado = await this.userRepository.save(user);
 
     // 4. Enviar correo AUTOMÁTICO usando las variables destructuradas
-    await this.mailService.enviarCorreoBienvenida(correo, nombres);
+    let message: string;
+    try { message = (await this.verification.send(usuarioGuardado.id)).message; }
+    catch { message = 'Cuenta creada. No se pudo enviar el correo de verificación; solicítalo desde tu perfil.'; }
 
     // 5. Retornar respuesta sin la contraseña
     const usuarioRespuesta = { ...usuarioGuardado };
         delete (usuarioRespuesta as any).password_hash;
+    return { usuario: usuarioRespuesta, message };
   }
 
   async validateUser(correo: string, password: string): Promise<any> {
@@ -73,7 +78,18 @@ export class AuthService {
       throw new Error('Usuario no encontrado');
     }
 
+    if (updateUserDto.correo && updateUserDto.correo !== user.correo) {
+      user.correo_verificado = false;
+      user.verificacion_hash = null;
+      user.verificacion_expira = null;
+    }
+    if (updateUserDto.password) {
+      user.password_hash = await bcrypt.hash(updateUserDto.password, 10);
+      delete updateUserDto.password;
+    }
     Object.assign(user, updateUserDto);
-    return await this.userRepository.save(user);
+    const saved = await this.userRepository.save(user);
+    const { password_hash, verificacion_hash, verificacion_expira, ...publicUser } = saved;
+    return publicUser;
   }
 }

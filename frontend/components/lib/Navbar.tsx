@@ -14,9 +14,10 @@ import {
 } from "react";
 import {
   clearSession,
+  obtenerPerfil,
+  ApiError,
   cerrarSesion,
   getStoredToken,
-  getStoredUser,
   setStoredToken,
   setStoredUser,
   type Rol,
@@ -41,18 +42,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Geppangon ti synchronous setState warning babaen ti queueMicrotask
-    queueMicrotask(() => {
-      const storedUser = getStoredUser();
+    let active = true;
+    const restore = async () => {
       const storedToken = getStoredToken();
-      if (storedUser) {
-        setUsuario(storedUser as Usuario);
+      try {
+        if (!storedToken || ['demo-token', 'session-token'].includes(storedToken)) {
+          clearSession();
+          return;
+        }
+        const profile = await obtenerPerfil();
+        if (active) {
+          setUsuario(profile);
+          setStoredUser(profile);
+          setToken(storedToken);
+        }
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) clearSession();
+      } finally {
+        if (active) setLoading(false);
       }
-      if (storedToken) {
-        setToken(storedToken);
-      }
-      setLoading(false);
-    });
+    };
+    void restore();
+    return () => { active = false; };
   }, []);
 
   const login = useCallback((nextUser: Usuario, nextToken?: string | null) => {
@@ -85,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       usuario,
       token,
       loading,
-      isAuthenticated: Boolean(usuario),
+      isAuthenticated: Boolean(usuario && token),
       login,
       logout,
       updateUsuario,

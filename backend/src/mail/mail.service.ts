@@ -5,6 +5,15 @@ import { MailerService } from '@nestjs-modules/mailer';
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
 
+  async enviarVerificacion(correo: string, enlace: string) {
+    await this.mailerService.sendMail({
+      to: correo,
+      subject: 'Verifica tu correo — Canchas Grupo 4',
+      text: 'Verifica tu correo abriendo este enlace (válido por 24 horas): ' + enlace,
+      html: '<div style="font-family:Arial;padding:24px"><h2>Verifica tu correo</h2><p>Confirma tu dirección para completar tu registro.</p><a style="display:inline-block;background:#047857;color:white;padding:14px 24px;border-radius:8px;text-decoration:none" href="' + enlace + '">Verificar correo</a><p>El enlace vence en 24 horas.</p></div>',
+    });
+  }
+
   async enviarCorreoBienvenida(correoCliente: string, nombreCliente: string) {
     try {
       await this.mailerService.sendMail({
