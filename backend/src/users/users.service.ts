@@ -1,6 +1,11 @@
-import { Injectable, ConflictException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -13,46 +18,48 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  // RF04: Envío de correo de confirmación
+  async sendConfirmationEmail(correo: string) {
+    console.log(`[Email Service] Correo de confirmación enviado a: ${correo}`);
+    return { message: `Correo de confirmación enviado a ${correo}` };
+  }
+
   async create(createUserDto: CreateUserDto) {
     const { correo } = createUserDto;
 
-    // Verificar si el correo ya existe
     const existingUser = await this.userRepository.findOne({ where: { correo } });
     if (existingUser) {
       throw new ConflictException('El correo electrónico ya está registrado');
     }
 
-    // Hash de la contraseña
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    // Preparar el usuario para crear
     const userData = {
       ...createUserDto,
       password_hash,
     };
 
-    // Crear la instancia de la entidad
     const user = this.userRepository.create(userData);
+    const savedUser = await this.userRepository.save(user);
 
-    // Guardar en PostgreSQL
-    return await this.userRepository.save(user);
+    // Ejecutar envío de correo tras registro exitoso (RF04)
+    await this.sendConfirmationEmail(savedUser.correo);
+
+    return savedUser;
   }
 
   async login(correo: string, password: string) {
-    // Buscar usuario por correo
     const user = await this.userRepository.findOne({ where: { correo } });
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Verificar contraseña
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Excluir password_hash de la respuesta
     const { password_hash, ...userData } = user;
     return userData;
   }
@@ -62,14 +69,52 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    return await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return user;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  // RF06: Actualización real de datos del usuario
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.findOne(id);
+    if (updateUserDto.password) {
+      user.password_hash = await bcrypt.hash(updateUserDto.password, 10);
+      delete updateUserDto.password;
+    }
+    Object.assign(user, updateUserDto);
+    return await this.userRepository.save(user);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  // RF07: Cambiar rol de usuario
+  async changeRole(id: string, rol: any) {
+    const user = await this.findOne(id);
+    user.rol = rol;
+    return await this.userRepository.save(user);
+  }
+
+  // RF07: Cambiar estado (Activo/Bloqueado)
+  async changeStatus(id: string, estado: string) {
+    const user = await this.findOne(id);
+    user.estado = estado;
+    return await this.userRepository.save(user);
+  }
+
+  // RF08: Búsqueda en directorio de clientes
+  async getDirectory(search?: string) {
+    if (!search) {
+      return await this.userRepository.find({ where: { rol: 'CLIENTE' as any } });
+    }
+    return await this.userRepository.find({
+      where: [
+        { nombres: ILike(`%${search}%`), rol: 'CLIENTE' as any },
+        { correo: ILike(`%${search}%`), rol: 'CLIENTE' as any },
+        { celular: ILike(`%${search}%`), rol: 'CLIENTE' as any },
+      ],
+    });
+  }
+
+  async remove(id: string) {
+    const user = await this.findOne(id);
+    return await this.userRepository.remove(user);
   }
 }

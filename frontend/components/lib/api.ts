@@ -18,6 +18,7 @@ export type Usuario = {
   correo: string;
   celular: string;
   rol: Rol;
+  estado?: string;
 };
 
 export type AuthResponse = {
@@ -241,6 +242,10 @@ export const api = {
     apiRequest<T>("POST", path, { ...options, body }),
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>("PUT", path, { ...options, body }),
+  patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
+    apiRequest<T>("PATCH", path, { ...options, body }), // <-- Agregado PATCH
+  delete: <T>(path: string, options?: RequestOptions) =>
+    apiRequest<T>("DELETE", path, options),
 };
 
 export function registrarUsuario(payload: Omit<RegistroFormValues, "confirmar_password">) {

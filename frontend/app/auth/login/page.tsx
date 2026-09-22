@@ -97,7 +97,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-slate-900">Iniciar sesión</h1>
         <p className="mt-2 text-sm text-slate-600">
           Ingresa tu correo y contraseña. El sistema validará tus credenciales y
-          cargará los permisos de tu rol (RF03, RF05).
+          cargará los permisos de tu rol.
         </p>
 
         {globalError && (

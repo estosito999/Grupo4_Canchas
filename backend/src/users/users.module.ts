@@ -11,11 +11,13 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { LocalStrategy } from './local.strategy';
 import { JwtStrategy } from './jwt.strategy'; // <-- 1. Importar JwtStrategy
 import { AuthModule } from '../auth/auth.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     AuthModule,
+    MailModule,
   ],
   controllers: [UsersController, AuthController],
   providers: [

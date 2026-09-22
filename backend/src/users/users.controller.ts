@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
@@ -13,7 +14,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('users')
@@ -30,6 +30,12 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // RF08: Directorio con filtro de búsqueda (debe ir antes de :id)
+  @Get('directory')
+  getDirectory(@Query('search') search?: string) {
+    return this.usersService.getDirectory(search);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
@@ -41,6 +47,24 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(id, updateUserDto);
+  }
+
+  // RF07: Endpoint para cambiar rol
+  @Patch(':id/role')
+  changeRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('rol') rol: string,
+  ) {
+    return this.usersService.changeRole(id, rol);
+  }
+
+  // RF07: Endpoint para cambiar estado
+  @Patch(':id/status')
+  changeStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('estado') estado: string,
+  ) {
+    return this.usersService.changeStatus(id, estado);
   }
 
   @Delete(':id')

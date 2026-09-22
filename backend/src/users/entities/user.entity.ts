@@ -35,6 +35,10 @@ export class User {
   @Column({ type: 'enum', enum: ['ADMINISTRADOR', 'EMPLEADO', 'CLIENTE'], default: 'CLIENTE' })
   rol: string; // 'ADMINISTRADOR', 'EMPLEADO', 'CLIENTE'
 
+  // Agrega esta columna
+  @Column({ type: 'varchar', default: 'Activo' })
+  estado: string;
+
   @CreateDateColumn()
   created_at: Date;
 

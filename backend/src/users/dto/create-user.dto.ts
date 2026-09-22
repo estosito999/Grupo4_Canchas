@@ -36,9 +36,10 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'El correo es obligatorio' })
   correo: string;
 
-@IsMobilePhone('es-ES', {}, { message: 'El número de celular debe ser válido' })
-@IsNotEmpty({ message: 'El celular es obligatorio' })
-celular: string;
+  @IsOptional()
+  @IsMobilePhone(undefined, {}, { message: 'El número de celular debe ser válido' })
+  @IsString()
+  celular?: string;
 
   @IsString()
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })

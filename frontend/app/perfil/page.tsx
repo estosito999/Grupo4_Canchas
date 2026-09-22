@@ -68,8 +68,14 @@ export default function PerfilPage() {
     setGlobalError(null);
     setSuccess(null);
 
+    // 1. Clonar valores y eliminar 'password' si está vacío
+    const payload = { ...values };
+    if (!payload.password || payload.password.trim() === "") {
+      delete payload.password;
+    }
+
     try {
-      const actualizado = await actualizarPerfil(values);
+      const actualizado = await actualizarPerfil(payload);
       updateUsuario({
         ...usuario!,
         ...actualizado,
@@ -81,6 +87,7 @@ export default function PerfilPage() {
         celular: actualizado.celular ?? values.celular,
       });
       setSuccess("Perfil actualizado correctamente.");
+      reset({ ...values, password: "" }); // Limpiar campo de contraseña
     } catch (error) {
       if (error instanceof ApiError && error.field) {
         setError(error.field as keyof PerfilFormValues, { message: error.message });
@@ -96,9 +103,7 @@ export default function PerfilPage() {
           correo: values.correo,
           celular: values.celular,
         });
-        setSuccess(
-          "Validación correcta. El backend no está disponible: los cambios se guardaron en esta sesión local.",
-        );
+        setSuccess("Cambios guardados localmente.");
         return;
       }
 
@@ -129,7 +134,7 @@ export default function PerfilPage() {
             <h1 className="text-2xl font-bold text-slate-900">Mi perfil</h1>
             <p className="mt-2 text-sm text-slate-600">
               Actualiza tu información de contacto. Se aplican las mismas validaciones
-              del registro (RF06).
+              del registro.
             </p>
           </div>
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">

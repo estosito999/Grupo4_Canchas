@@ -41,15 +41,15 @@ export default function Home() {
             <h2 className="text-xl font-semibold">¿Qué puedes hacer?</h2>
             <ul className="mt-6 space-y-4 text-emerald-100">
               <li className="rounded-2xl bg-emerald-950/70 p-4">
-                <strong className="text-lime-300">RF01 · Registro</strong>
+                <strong className="text-lime-300">Registro</strong>
                 <p className="mt-1 text-sm">Crea tu usuario con datos personales validados.</p>
               </li>
               <li className="rounded-2xl bg-emerald-950/70 p-4">
-                <strong className="text-lime-300">RF03 · Sesión</strong>
+                <strong className="text-lime-300">Sesión</strong>
                 <p className="mt-1 text-sm">Inicia y cierra sesión de forma segura.</p>
               </li>
               <li className="rounded-2xl bg-emerald-950/70 p-4">
-                <strong className="text-lime-300">RF06 · Perfil</strong>
+                <strong className="text-lime-300">Perfil</strong>
                 <p className="mt-1 text-sm">Edita tu información de contacto cuando lo necesites.</p>
               </li>
             </ul>
@@ -60,7 +60,7 @@ export default function Home() {
       <section className="mx-auto w-full max-w-6xl px-4 py-16">
         <h2 className="text-2xl font-bold text-slate-900">Roles del sistema</h2>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Al iniciar sesión se cargan los permisos correspondientes (RF05).
+          Al iniciar sesión se cargan los permisos correspondientes.
         </p>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {[

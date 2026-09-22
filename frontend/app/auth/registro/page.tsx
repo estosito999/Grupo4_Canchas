@@ -101,7 +101,7 @@ export default function RegistroPage() {
         <h1 className="text-2xl font-bold text-slate-900">Crear cuenta</h1>
         <p className="mt-2 text-sm text-slate-600">
           Completa tus datos. Validamos mayoría de edad, formato de correo y celular.
-          El correo y el celular deben ser únicos (RF01, RF02).
+          El correo y el celular deben ser únicos.
         </p>
 
         {globalError && (

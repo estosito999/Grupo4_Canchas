@@ -1,4 +1,4 @@
-// Ruta: frontend/components/lib/Navbar.tsx
+// Ruta: frontend/app/components/lib/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -21,7 +21,7 @@ import {
   setStoredUser,
   type Rol,
   type Usuario,
-} from "@/components/lib/api";
+} from "./api";
 
 type AuthContextValue = {
   usuario: Usuario | null;
@@ -41,9 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUsuario(getStoredUser());
-    setToken(getStoredToken());
-    setLoading(false);
+    // Geppangon ti synchronous setState warning babaen ti queueMicrotask
+    queueMicrotask(() => {
+      const storedUser = getStoredUser();
+      const storedToken = getStoredToken();
+      if (storedUser) {
+        setUsuario(storedUser as Usuario);
+      }
+      if (storedToken) {
+        setToken(storedToken);
+      }
+      setLoading(false);
+    });
   }, []);
 
   const login = useCallback((nextUser: Usuario, nextToken?: string | null) => {
@@ -63,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await cerrarSesion();
     } catch {
-      // El cierre de sesión local debe funcionar aunque el backend no responda.
+      // Cierre de sesión local
     } finally {
       clearSession();
       setUsuario(null);
@@ -144,9 +153,9 @@ export default function Navbar() {
 
   const roleLinks =
     usuario?.rol === "ADMINISTRADOR"
-      ? [{ href: "/perfil", label: "Panel Admin" }]
+      ? [{ href: "/admin", label: "Panel Admin" }]
       : usuario?.rol === "EMPLEADO"
-        ? [{ href: "/perfil", label: "Gestión" }]
+        ? [{ href: "/empleado", label: "Directorio Clientes" }]
         : usuario?.rol === "CLIENTE"
           ? [{ href: "/perfil", label: "Mis Reservas" }]
           : [];
@@ -197,7 +206,7 @@ export default function Navbar() {
               >
                 {loggingOut ? "Cerrando..." : "Cerrar Sesión"}
               </button>
-              {usuario && (
+              {usuario?.rol && roleLabel[usuario.rol] && (
                 <span className="ml-2 rounded-full bg-lime-400 px-3 py-1 text-xs font-semibold text-emerald-950">
                   {roleLabel[usuario.rol]}
                 </span>
@@ -240,7 +249,7 @@ export default function Navbar() {
               >
                 {loggingOut ? "Cerrando..." : "Cerrar Sesión"}
               </button>
-              {usuario && (
+              {usuario?.rol && roleLabel[usuario.rol] && (
                 <span className="mt-1 w-fit rounded-full bg-lime-400 px-3 py-1 text-xs font-semibold text-emerald-950">
                   {roleLabel[usuario.rol]}
                 </span>

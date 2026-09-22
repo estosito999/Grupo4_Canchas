@@ -1,9 +1,10 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -11,30 +12,38 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(createUserDto: any) {
-    const { correo } = createUserDto;
+    const { correo, password, nombres } = createUserDto;
 
-    // Verificar si el correo ya existe
+    // 1. Verificar si el correo ya existe
     const existingUser = await this.userRepository.findOne({ where: { correo } });
     if (existingUser) {
       throw new ConflictException('El correo electrónico ya está registrado');
     }
 
-    // Hash de la contraseña
+    // 2. Hash de la contraseña
     const saltRounds = 10;
-    const password_hash = await bcrypt.hash(createUserDto.password, saltRounds);
+    const password_hash = await bcrypt.hash(password, saltRounds);
 
-    // Preparar el usuario para crear
+    // 3. Preparar datos y guardar en PostgreSQL
     const userData = {
       ...createUserDto,
       password_hash,
     };
+    delete userData.password;
 
-    // Crear el usuario
     const user = this.userRepository.create(userData);
-    return await this.userRepository.save(user);
+    const usuarioGuardado = await this.userRepository.save(user);
+
+    // 4. Enviar correo AUTOMÁTICO usando las variables destructuradas
+    await this.mailService.enviarCorreoBienvenida(correo, nombres);
+
+    // 5. Retornar respuesta sin la contraseña
+    const usuarioRespuesta = { ...usuarioGuardado };
+        delete (usuarioRespuesta as any).password_hash;
   }
 
   async validateUser(correo: string, password: string): Promise<any> {
