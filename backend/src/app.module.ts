@@ -20,8 +20,8 @@ import { UsersModule } from './users/users.module';
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
+        password: configService.get<string>('123456'),//PASSWORD
+        database: configService.get<string>('complejo_deprtivo'),//DB_DATABASE
         autoLoadEntities: true,
         synchronize: true, // Sincroniza automáticamente los modelos con las tablas de PostgreSQL
       }),
