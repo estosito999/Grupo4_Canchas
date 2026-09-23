@@ -8,8 +8,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const dynamic = "force-dynamic";
+
 import {
   ApiError,
+  api,             // <-- Agregado de su código para llamar a /auth/reenviar-verificacion
+  obtenerPerfil,   // <-- Agregado para refrescar el perfil
   actualizarPerfil,
   isNetworkError,
   perfilSchema,
@@ -24,9 +27,10 @@ function FieldError({ message }: { message?: string }) {
 
 export default function PerfilPage() {
   const router = useRouter();
-  const { usuario, loading, isAuthenticated, updateUsuario } = useAuth();
+  const { usuario, loading, isAuthenticated, updateUsuario, logout } = useAuth(); // <-- Agregado logout
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [sendingVerification, setSendingVerification] = useState(false); // <-- Estado para el botón de verificación
 
   const {
     register,
@@ -65,6 +69,52 @@ export default function PerfilPage() {
       password: "",
     });
   }, [usuario, reset]);
+
+  // -----------------------------------------------------------------------
+  // LÓGICA DE VERIFICACIÓN DE CORREO (Agregada de su código)
+  // -----------------------------------------------------------------------
+  
+  // Refresca el perfil al regresar a la pestaña por si verificó el correo en otra ventana
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const refresh = () => {
+      obtenerPerfil()
+        .then(updateUsuario)
+        .catch((error) => {
+          if (error instanceof ApiError && error.status === 401) {
+            void logout();
+            router.replace('/auth/login');
+          }
+        });
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
+  }, [isAuthenticated, updateUsuario, logout, router]);
+
+  // Función para reenviar el correo de verificación
+  async function sendVerification() {
+    setSendingVerification(true);
+    setGlobalError(null);
+    setSuccess(null);
+    try {
+      const result = await api.post<{ message: string }>('/auth/reenviar-verificacion');
+      setSuccess(result.message);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        await logout();
+        router.replace('/auth/login');
+        return;
+      }
+      setGlobalError(error instanceof Error ? error.message : 'No se pudo enviar el correo.');
+    } finally {
+      setSendingVerification(false);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // TU LÓGICA ORIGINAL
+  // -----------------------------------------------------------------------
 
   async function onSubmit(values: PerfilFormValues) {
     setGlobalError(null);
@@ -134,6 +184,24 @@ export default function PerfilPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Mi perfil</h1>
+            
+            {/* COMPONENTE VISUAL DE VERIFICACIÓN (Agregado de su código) */}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <span className={usuario.correo_verificado ? 'text-emerald-700 font-medium' : 'text-amber-700 font-medium'}>
+                {usuario.correo_verificado ? 'Correo verificado' : 'Correo no verificado'}
+              </span>
+              {!usuario.correo_verificado && (
+                <button
+                  type="button"
+                  onClick={sendVerification}
+                  disabled={sendingVerification}
+                  className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:opacity-50"
+                >
+                  {sendingVerification ? 'Enviando...' : 'Verificar correo'}
+                </button>
+              )}
+            </div>
+
             <p className="mt-2 text-sm text-slate-600">
               Actualiza tu información de contacto. Se aplican las mismas validaciones
               del registro.

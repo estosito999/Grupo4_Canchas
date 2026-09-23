@@ -27,7 +27,7 @@ import { UsersModule } from '../users/users.module';
 @Module({
   imports: [
     UsersModule,
-    MailModule,
+    MailModule, // <--- YA LO TIENES IMPORTADO: Esto inyecta el VerificationService
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

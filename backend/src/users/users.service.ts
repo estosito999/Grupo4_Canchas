@@ -10,7 +10,7 @@ import { ILike, Not, QueryFailedError, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserEstado, UserRole } from './entities/user.entity';
-import { MailService } from '../mail/mail.service';
+import { VerificationService } from '../mail/verification.service'; // <-- Adaptado (antes MailService)
 import * as bcrypt from 'bcrypt';
 
 /** RNF01: bcrypt con 10 rondas, único algoritmo de hashing permitido. */
@@ -33,7 +33,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly mailService: MailService,
+    private readonly verification: VerificationService, // <-- Inyectado el de tu compañero
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -122,11 +122,12 @@ export class UsersService {
    * timeout de SMTP nunca bloquee ni haga fallar la respuesta HTTP.
    */
   private dispararCorreoBienvenida(usuario: User): void {
-    void this.mailService
-      .enviarCorreoBienvenida(usuario.correo, usuario.nombres, usuario.rol)
+    // <-- Adaptado a la lógica de tu compañero usando verification.send
+    void this.verification
+      .send(usuario.id)
       .catch((error: unknown) => {
         this.logger.warn(
-          `No se pudo enviar el correo de bienvenida a ${usuario.correo}: ${
+          `No se pudo enviar el correo de verificación a ${usuario.correo}: ${
             error instanceof Error ? error.message : 'error desconocido'
           }`,
         );

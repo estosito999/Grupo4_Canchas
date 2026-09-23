@@ -38,7 +38,6 @@ export class User {
   @Column({ type: 'date' })
   fecha_nacimiento: string;
 
-  // RNF03: integridad => correo y celular únicos a nivel de base de datos.
   @Column({ type: 'varchar', length: 150, unique: true })
   correo: string;
 
@@ -51,11 +50,26 @@ export class User {
   password_hash: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENTE })
-  rol: UserRole; // 'ADMINISTRADOR' | 'EMPLEADO' | 'CLIENTE'
+  rol: UserRole;
 
   @Column({ type: 'varchar', length: 20, default: UserEstado.ACTIVO })
-  estado: UserEstado; // 'Activo' | 'Bloqueado'
+  estado: UserEstado;
 
+  // -----------------------------------------------------------------------
+  // CAMPOS DE VERIFICACIÓN DE CORREO (Tuyos)
+  // -----------------------------------------------------------------------
+  @Column({ default: false })
+  correo_verificado: boolean;
+
+  @Column({ type: 'varchar', nullable: true, select: false })
+  verificacion_hash: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true, select: false })
+  verificacion_expira: Date | null;
+
+  // -----------------------------------------------------------------------
+  // TIMESTAMPS
+  // -----------------------------------------------------------------------
   @CreateDateColumn()
   created_at: Date;
 

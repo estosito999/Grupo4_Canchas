@@ -34,6 +34,7 @@ export type Usuario = {
   estado?: EstadoUsuario;
   created_at?: string;
   updated_at?: string;
+  correo_verificado?: boolean;
 };
 
 export type AuthResponse = {

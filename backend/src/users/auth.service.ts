@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEstado, UserRole } from './entities/user.entity';
 import { MailService } from '../mail/mail.service';
+import { VerificationService } from '../mail/verification.service'; // <-- Importado el servicio de tu compañero
 import { UsersService } from './users.service';
 
 /** Datos que viajan firmados en el JWT y quedan disponibles en `req.user`. */
@@ -23,13 +24,13 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly verification: VerificationService, // <-- Inyectado
   ) {}
 
   /**
    * RF01/RF02/RF04: registro público. UsersService.create valida la duplicidad de
    * correo y celular, aplica bcrypt y persiste el usuario. El rol se fuerza a
-   * CLIENTE (RF05) y el correo de bienvenida se envía desde aquí SIN await para
-   * que un timeout de SMTP no bloquee ni haga fallar la respuesta HTTP.
+   * CLIENTE (RF05) y el correo de bienvenida se envía desde aquí.
    */
   async register(createUserDto: CreateUserDto) {
     const usuario = await this.usersService.create(
@@ -38,20 +39,21 @@ export class AuthService {
       false, // el correo lo dispara este servicio justo debajo
     );
 
-    // RF04: MailService nunca lanza excepciones, solo registra el error.
-    void this.mailService
-      .enviarCorreoBienvenida(usuario.correo, usuario.nombres, usuario.rol)
-      .catch((error: unknown) =>
-        this.logger.warn(
-          `Correo de bienvenida no enviado a ${usuario.correo}: ${
-            error instanceof Error ? error.message : 'error desconocido'
-          }`,
-        ),
+    // RF04: Lógica de envío de correo adaptada de tu compañero
+    let message: string;
+    try { 
+      message = (await this.verification.send(usuario.id)).message; 
+    } catch (error: unknown) { 
+      this.logger.warn(
+        `Correo de verificación no enviado a ${usuario.correo}: ${
+          error instanceof Error ? error.message : 'error desconocido'
+        }`,
       );
+      message = 'Cuenta creada. No se pudo enviar el correo de verificación; solicítalo desde tu perfil.'; 
+    }
 
     return {
-      message:
-        'Cuenta creada correctamente. Te enviamos un correo de confirmación (RF04).',
+      message,
       usuario,
     };
   }
