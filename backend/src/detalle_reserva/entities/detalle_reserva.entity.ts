@@ -1,5 +1,6 @@
 import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
+import { Cancha} from '../../cancha/cancha.entity';
 
 @Entity('detalle_reserva')
 export class DetalleReserva {
@@ -15,6 +16,9 @@ export class DetalleReserva {
   @ManyToOne(() => Reserva, (reserva) => reserva.detalles)
   @JoinColumn({ name: 'id_reserva' })
   reserva: Reserva;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  subtotal: number;
 
   //pendnte para implementar con el modulo de  canchas
   @ManyToOne(() => Cancha, (cancha) => cancha.detalles)

@@ -5,6 +5,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Disponibilidad } from '../disponibilidad/disponibilidad.entity';
+import { DetalleReserva } from '../detalle_reserva/entities/detalle_reserva.entity';
 
 export enum EstadoCancha {
   DISPONIBLE = 'Disponible',
@@ -43,4 +44,7 @@ export class Cancha {
 
   @OneToMany(() => Disponibilidad, (disponibilidad) => disponibilidad.cancha)
   disponibilidades: Disponibilidad[];
+
+  @OneToMany(() => DetalleReserva, (detalleReserva) => detalleReserva.cancha)
+  detalles: DetalleReserva[];
 }

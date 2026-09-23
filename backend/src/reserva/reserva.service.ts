@@ -6,13 +6,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DetalleReserva } from '../detalle_reserva/entities/detalle_reserva.entity';
 import { In } from 'typeorm';
+import { Cancha, EstadoCancha } from '../cancha/cancha.entity';
 @Injectable()
 export class ReservaService {
   constructor(
     @InjectRepository(Reserva)
     private readonly reservaRepositorio : Repository<Reserva>,
     @InjectRepository(DetalleReserva)
-    private readonly detalleRepositorio: Repository<DetalleReserva>
+    private readonly detalleRepositorio: Repository<DetalleReserva>,
+    @InjectRepository(Cancha)
+    private readonly canchaRepositorio: Repository<Cancha>
     ){}
   async crearReserva(createReservaDto: CreateReservaDto) {
 
@@ -26,7 +29,7 @@ export class ReservaService {
     }
 
     const detallesArmados = createReservaDto.detalles.map( item => {
-      const cancha = canchas.find(c => c.codCancha === item.codCancha);
+      const cancha = canchas.find(c => c.codCancha === item.codCancha)!;
 
       const cantidadHoras = 1;
       const subtotalCalcualdo = cancha.precioHora * cantidadHoras;
