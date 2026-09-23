@@ -1,32 +1,22 @@
-// users.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PassportModule } from '@nestjs/passport'; 
 
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { LocalStrategy } from './local.strategy';
-import { JwtStrategy } from './jwt.strategy'; // <-- 1. Importar JwtStrategy
-import { AuthModule } from '../auth/auth.module';
+import { RolesGuard } from './jwt-auth.guard'; 
 import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    AuthModule,
+    TypeOrmModule.forFeature([User]), 
     MailModule,
+    // LA SOLUCIÓN: Usar .register() provee el AuthModuleOptions que exige el Guard
+    PassportModule.register({ defaultStrategy: 'jwt' }) 
   ],
-  controllers: [UsersController, AuthController],
-  providers: [
-    UsersService,
-    AuthService,
-    JwtAuthGuard,
-    LocalStrategy,
-    JwtStrategy, // <-- 2. Agregar aquí para registrar la estrategia "jwt"
-  ],
-  exports: [UsersService, TypeOrmModule, JwtAuthGuard],
+  controllers: [UsersController],
+  providers: [UsersService, RolesGuard],
+  exports: [UsersService, TypeOrmModule, RolesGuard],
 })
 export class UsersModule {}
