@@ -1,10 +1,15 @@
-// Ruta: frontend/app/empleado/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api, Usuario } from '../../components/lib/api';
+import {
+  Usuario,
+  actualizarContactoCliente,
+  buscarClientes,
+} from '../../components/lib/api';
 import { useAuth } from '../../components/lib/Navbar';
+
+export const dynamic = "force-dynamic";
 
 const EmpleadoPage: React.FC = () => {
   const { usuario, loading: authLoading } = useAuth();
@@ -25,10 +30,10 @@ const EmpleadoPage: React.FC = () => {
     }
   }, [usuario, authLoading, router]);
 
-  useEffect(() => {
+    useEffect(() => {
     const loadClients = async () => {
       try {
-        const data = await api.get<Usuario[]>(`/users/directory?search=${searchTerm}`);
+        const data = await buscarClientes(searchTerm);
         setClients(data);
       } catch (error) {
         console.error('Error al cargar clientes:', error);
@@ -46,15 +51,17 @@ const EmpleadoPage: React.FC = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Función para guardar solo información de contacto (Limitado)
+    // Función para guardar solo información de contacto (Limitado)
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingClient?.id) return;
 
     try {
-      await api.patch(`/users/${editingClient.id}`, {
+      await actualizarContactoCliente(editingClient.id, {
         nombres: editingClient.nombres,
         apellido_paterno: editingClient.apellido_paterno,
+        apellido_materno: editingClient.apellido_materno,
+        correo: editingClient.correo,
         celular: editingClient.celular,
       });
       setClients((prev) =>
@@ -137,28 +144,48 @@ const EmpleadoPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de edición con permisos LIMITADOS (Sin rol, sin estado) */}
+            {/* Modal de edición con permisos LIMITADOS (Sin rol, sin estado) */}
       {editingClient && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl">
             <h2 className="text-lg font-bold mb-4 text-slate-900">Actualizar Contacto</h2>
             <form onSubmit={handleSaveClient} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-700">Nombres</label>
+                  <input
+                    type="text"
+                    value={editingClient.nombres}
+                    onChange={(e) => setEditingClient({ ...editingClient, nombres: e.target.value })}
+                    className="w-full border rounded-lg p-2 text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700">Apellido Paterno</label>
+                  <input
+                    type="text"
+                    value={editingClient.apellido_paterno || ''}
+                    onChange={(e) => setEditingClient({ ...editingClient, apellido_paterno: e.target.value })}
+                    className="w-full border rounded-lg p-2 text-sm"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="text-xs font-medium text-slate-700">Nombres</label>
+                <label className="text-xs font-medium text-slate-700">Apellido Materno</label>
                 <input
                   type="text"
-                  value={editingClient.nombres}
-                  onChange={(e) => setEditingClient({ ...editingClient, nombres: e.target.value })}
+                  value={editingClient.apellido_materno || ''}
+                  onChange={(e) => setEditingClient({ ...editingClient, apellido_materno: e.target.value })}
                   className="w-full border rounded-lg p-2 text-sm"
-                  required
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-700">Apellido Paterno</label>
+                <label className="text-xs font-medium text-slate-700">Correo</label>
                 <input
-                  type="text"
-                  value={editingClient.apellido_paterno || ''}
-                  onChange={(e) => setEditingClient({ ...editingClient, apellido_paterno: e.target.value })}
+                  type="email"
+                  value={editingClient.correo || ''}
+                  onChange={(e) => setEditingClient({ ...editingClient, correo: e.target.value })}
                   className="w-full border rounded-lg p-2 text-sm"
                 />
               </div>

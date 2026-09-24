@@ -10,13 +10,20 @@ const { config: tsconfig } = ts.readConfigFile(
 );
 const paths = tsconfig?.compilerOptions?.paths ?? {};
 
+/**
+ * Jest + NestJS 12 ESM: @nestjs/testing (v12) es un paquete ESM-only
+ * ("type": "module"). Jest en modo CommonJS no puede hacer require() de él.
+ * Se habilita el modo ESM nativo de Node.js (--experimental-vm-modules) y
+ * ts-jest con useESM para transformar los .ts de los tests a módulos ESM.
+ */
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: { module: 'ESNext', moduleResolution: 'Bundler' } }],
   },
+    extensionsToTreatAsEsm: ['.ts'], // '.js' se infiere del campo "type" del package.json,
   moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: '<rootDir>/' }),
   collectCoverageFrom: [
     'src/**/*.(t|j)s',
@@ -25,6 +32,7 @@ const config: Config = {
   ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/test/setup-unit.ts'],
 };
 
 export default config;

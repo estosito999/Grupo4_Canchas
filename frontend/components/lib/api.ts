@@ -7,7 +7,20 @@ export const API_BASE_URL =
 export const TOKEN_STORAGE_KEY = "canchas.auth.token";
 export const USER_STORAGE_KEY = "canchas.auth.user";
 
-export type Rol = "ADMINISTRADOR" | "EMPLEADO" | "CLIENTE";
+/** RF05: roles soportados por el sistema (deben coincidir con el backend). */
+export const ROLES = ["ADMINISTRADOR", "EMPLEADO", "CLIENTE"] as const;
+export type Rol = (typeof ROLES)[number];
+
+/** RF07: estados posibles de una cuenta. */
+export const ESTADOS = ["Activo", "Bloqueado"] as const;
+export type EstadoUsuario = (typeof ESTADOS)[number];
+
+/** Etiquetas legibles para la interfaz. */
+export const rolLabels: Record<Rol, string> = {
+  ADMINISTRADOR: "Administrador",
+  EMPLEADO: "Empleado",
+  CLIENTE: "Cliente",
+};
 
 export type Usuario = {
   id?: string | number;
@@ -18,7 +31,9 @@ export type Usuario = {
   correo: string;
   celular: string;
   rol: Rol;
-  estado?: string;
+  estado?: EstadoUsuario;
+  created_at?: string;
+  updated_at?: string;
   correo_verificado?: boolean;
 };
 
@@ -122,9 +137,45 @@ export const perfilSchema = usuarioBaseSchema.extend({
     }),
 });
 
+/**
+ * RF07: creación de usuarios desde el panel de administración. Es el único
+ * formulario donde se elige el rol (el registro público siempre es CLIENTE).
+ */
+export const crearUsuarioSchema = usuarioBaseSchema.extend({
+  rol: z.enum(ROLES, { message: "Selecciona un rol válido" }),
+});
+
+/** RF07: edición completa desde el panel (contraseña opcional + estado). */
+export const editarUsuarioSchema = usuarioBaseSchema.extend({
+  password: z
+    .string()
+    .max(72, "La contraseña no puede superar 72 caracteres")
+    .optional()
+    .refine((value) => !value || value.length >= 8, {
+      message: "La contraseña debe tener al menos 8 caracteres",
+    }),
+  rol: z.enum(ROLES, { message: "Selecciona un rol válido" }),
+  estado: z.enum(ESTADOS, { message: "Selecciona un estado válido" }),
+});
+
+/**
+ * RF08: el Empleado solo puede editar datos de contacto del cliente, sin rol,
+ * estado, contraseña ni fecha de nacimiento.
+ */
+export const contactoClienteSchema = usuarioBaseSchema.pick({
+  nombres: true,
+  apellido_paterno: true,
+  apellido_materno: true,
+  correo: true,
+  celular: true,
+});
+
 export type RegistroFormValues = z.infer<typeof registroSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type PerfilFormValues = z.infer<typeof perfilSchema>;
+export type CrearUsuarioFormValues = z.infer<typeof crearUsuarioSchema>;
+export type EditarUsuarioFormValues = z.infer<typeof editarUsuarioSchema>;
+export type ContactoClienteFormValues = z.infer<typeof contactoClienteSchema>;
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -171,30 +222,47 @@ type RequestOptions = {
   headers?: HeadersInit;
 };
 
+type ErrorPayload = {
+  message?: string | string[];
+  error?: string;
+  field?: string;
+  details?: unknown;
+};
+
 async function parseError(response: Response): Promise<ApiError> {
-  let payload: {
-    message?: string;
-    error?: string;
-    field?: string;
-    details?: unknown;
-  } = {};
+  let payload: ErrorPayload = {};
 
   try {
-    payload = (await response.json()) as typeof payload;
+    payload = (await response.json()) as ErrorPayload;
   } catch {
     payload = {};
   }
 
+  // class-validator devuelve `message` como arreglo: se toma el primer detalle
+  // para que la interfaz siempre muestre un texto (nunca un array).
+  const mensajes = Array.isArray(payload.message)
+    ? payload.message
+    : payload.message
+      ? [payload.message]
+      : [];
+
   const message =
-    payload.message ||
+    mensajes[0] ||
     payload.error ||
     (response.status === 401
       ? "Credenciales incorrectas. Verifica tu correo y contraseña."
-      : response.status === 409
-        ? "El correo o el celular ya se encuentran registrados."
-        : `Error ${response.status} al comunicarse con el servidor.`);
+      : response.status === 403
+        ? "Tu rol no tiene permisos para realizar esta acción."
+        : response.status === 409
+          ? "El correo o el celular ya se encuentran registrados."
+          : `Error ${response.status} al comunicarse con el servidor.`);
 
-  return new ApiError(message, response.status, payload.field, payload.details);
+  return new ApiError(
+    message,
+    response.status,
+    payload.field,
+    payload.details ?? mensajes,
+  );
 }
 
 export async function apiRequest<T>(
@@ -296,6 +364,94 @@ export function actualizarPerfil(payload: PerfilFormValues) {
 
 export function isNetworkError(error: unknown): boolean {
   return error instanceof ApiError && error.status === 0;
+}
+
+// ---------------------------------------------------------------------------
+// RF07: panel de administración (solo ADMINISTRADOR)
+// ---------------------------------------------------------------------------
+
+/** Lista completa de usuarios (incluye roles y estados). */
+export function listarUsuarios() {
+  return api.get<Usuario[]>("/users");
+}
+
+/** Alta completa de usuarios: el Administrador decide el rol. */
+export function crearUsuario(payload: CrearUsuarioFormValues) {
+  return api.post<Usuario>("/users", {
+    nombres: payload.nombres,
+    apellido_paterno: payload.apellido_paterno,
+    apellido_materno: payload.apellido_materno,
+    fecha_nacimiento: payload.fecha_nacimiento,
+    correo: payload.correo,
+    celular: payload.celular,
+    password: payload.password,
+    rol: payload.rol,
+  });
+}
+
+/** Edición completa: datos, rol, estado y (opcionalmente) contraseña. */
+export function actualizarUsuario(
+  id: string | number,
+  payload: EditarUsuarioFormValues,
+) {
+  const body: Record<string, unknown> = {
+    nombres: payload.nombres,
+    apellido_paterno: payload.apellido_paterno,
+    apellido_materno: payload.apellido_materno,
+    fecha_nacimiento: payload.fecha_nacimiento,
+    correo: payload.correo,
+    celular: payload.celular,
+    rol: payload.rol,
+    estado: payload.estado,
+  };
+
+  if (payload.password) {
+    body.password = payload.password;
+  }
+
+  return api.patch<Usuario>(`/users/${id}`, body);
+}
+
+/** RF07: cambio de rol de un usuario. */
+export function cambiarRol(id: string | number, rol: Rol) {
+  return api.patch<Usuario>(`/users/${id}/role`, { rol });
+}
+
+/** RF07: activar o bloquear una cuenta. */
+export function cambiarEstado(id: string | number, estado: EstadoUsuario) {
+  return api.patch<Usuario>(`/users/${id}/status`, { estado });
+}
+
+/** RF07: eliminar un usuario. */
+export function eliminarUsuario(id: string | number) {
+  return api.delete<{ message: string }>(`/users/${id}`);
+}
+
+// ---------------------------------------------------------------------------
+// RF08: directorio de clientes (ADMINISTRADOR y EMPLEADO)
+// ---------------------------------------------------------------------------
+
+/** Búsqueda de clientes por nombres, apellidos, correo o celular. */
+export function buscarClientes(search = "") {
+  const termino = search.trim();
+  const query = termino ? `?search=${encodeURIComponent(termino)}` : "";
+  return api.get<Usuario[]>(`/users/directory${query}`);
+}
+
+/**
+ * RF08: edición LIMITADA del empleado. Solo datos de contacto del cliente.
+ */
+export function actualizarContactoCliente(
+  id: string | number,
+  payload: ContactoClienteFormValues,
+) {
+  return api.patch<Usuario>(`/users/${id}/contacto`, {
+    nombres: payload.nombres,
+    apellido_paterno: payload.apellido_paterno,
+    apellido_materno: payload.apellido_materno,
+    correo: payload.correo,
+    celular: payload.celular,
+  });
 }
 
 export function toUsuarioFromRegistro(

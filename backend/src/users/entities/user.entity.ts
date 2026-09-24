@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,17 +7,21 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+/** RF05: roles soportados por el sistema. */
+export enum UserRole {
+  ADMINISTRADOR = 'ADMINISTRADOR',
+  EMPLEADO = 'EMPLEADO',
+  CLIENTE = 'CLIENTE',
+}
+
+/** RF07: estado de la cuenta (Activo | Bloqueado). */
+export enum UserEstado {
+  ACTIVO = 'Activo',
+  BLOQUEADO = 'Bloqueado',
+}
+
 @Entity('users')
 export class User {
-  @Column({ default: false })
-  correo_verificado: boolean;
-
-  @Column({ type: 'varchar', nullable: true, select: false })
-  verificacion_hash: string | null;
-
-  @Column({ type: 'timestamptz', nullable: true, select: false })
-  verificacion_expira: Date | null;
-
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -29,8 +34,9 @@ export class User {
   @Column({ type: 'varchar', length: 100 })
   apellido_materno: string;
 
+  // RF01/RF02: tipo 'date' => PostgreSQL entrega y recibe 'AAAA-MM-DD'.
   @Column({ type: 'date' })
-  fecha_nacimiento: Date;
+  fecha_nacimiento: string;
 
   @Column({ type: 'varchar', length: 150, unique: true })
   correo: string;
@@ -38,16 +44,32 @@ export class User {
   @Column({ type: 'varchar', length: 20, unique: true })
   celular: string;
 
+  // RNF01: solo se guarda el hash bcrypt; @Exclude evita que salga en las respuestas.
+  @Exclude()
   @Column({ type: 'varchar', length: 255 })
   password_hash: string;
 
-  @Column({ type: 'enum', enum: ['ADMINISTRADOR', 'EMPLEADO', 'CLIENTE'], default: 'CLIENTE' })
-  rol: string; // 'ADMINISTRADOR', 'EMPLEADO', 'CLIENTE'
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENTE })
+  rol: UserRole;
 
-  // Agrega esta columna
-  @Column({ type: 'varchar', default: 'Activo' })
-  estado: string;
+  @Column({ type: 'varchar', default: UserEstado.ACTIVO })
+  estado: UserEstado;
 
+  // -----------------------------------------------------------------------
+  // CAMPOS DE VERIFICACIÓN DE CORREO (Tuyos)
+  // -----------------------------------------------------------------------
+  @Column({ default: false })
+  correo_verificado: boolean;
+
+  @Column({ type: 'varchar', nullable: true, select: false })
+  verificacion_hash: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true, select: false })
+  verificacion_expira: Date | null;
+
+  // -----------------------------------------------------------------------
+  // TIMESTAMPS
+  // -----------------------------------------------------------------------
   @CreateDateColumn()
   created_at: Date;
 
