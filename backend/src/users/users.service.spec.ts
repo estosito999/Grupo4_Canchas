@@ -16,6 +16,7 @@ describe('UsersService', () => {
     create: jest.Mock;
     save: jest.Mock;
     remove: jest.Mock;
+    softRemove: jest.Mock;
   };
   let verification: { send: jest.Mock };
 
@@ -38,6 +39,7 @@ describe('UsersService', () => {
         Promise.resolve({ id: 'uuid-1', ...datos }),
       ),
       remove: jest.fn(),
+      softRemove: jest.fn(),
     };
     verification = { send: jest.fn().mockResolvedValue(true) };
 
@@ -54,6 +56,43 @@ describe('UsersService', () => {
 
   it('debe estar definido', () => {
     expect(service).toBeDefined();
+  });
+
+  it('conserva el registro al eliminar un usuario', async () => {
+    const usuario = { id: 'uuid-1', correo: dtoBase.correo };
+    repositorio.findOne.mockResolvedValueOnce(usuario);
+
+    await expect(service.remove('uuid-1', 'admin')).resolves.toEqual({
+      message: 'Usuario eliminado correctamente',
+    });
+
+    expect(repositorio.softRemove).toHaveBeenCalledWith(usuario);
+    expect(repositorio.remove).not.toHaveBeenCalled();
+  });
+
+  it('no permite eliminar la propia cuenta', async () => {
+    await expect(service.remove('admin', 'admin')).rejects.toThrow(
+      'No puedes eliminar tu propia cuenta',
+    );
+    expect(repositorio.softRemove).not.toHaveBeenCalled();
+  });
+
+  it('no elimina una cuenta inexistente o ya eliminada', async () => {
+    repositorio.findOne.mockResolvedValueOnce(null);
+    await expect(service.remove('uuid-1', 'admin')).rejects.toThrow(
+      'Usuario no encontrado',
+    );
+    expect(repositorio.softRemove).not.toHaveBeenCalled();
+  });
+
+  it('mantiene reservado el correo de las cuentas eliminadas', async () => {
+    repositorio.findOne.mockResolvedValueOnce({
+      id: 'eliminado', deleted_at: new Date(),
+    });
+    await expect(service.create(dtoBase)).rejects.toBeInstanceOf(ConflictException);
+    expect(repositorio.findOne).toHaveBeenCalledWith({
+      where: { correo: dtoBase.correo }, withDeleted: true,
+    });
   });
 
   it('RF02: rechaza un correo ya registrado', async () => {

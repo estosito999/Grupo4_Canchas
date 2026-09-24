@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository, MoreThan, IsNull } from 'typeorm';
 import { createHash, randomBytes } from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { MailService } from './mail.service';
@@ -36,6 +36,7 @@ export class VerificationService {
   async verify(token: string) {
     if (!/^[a-f0-9]{64}$/.test(token || '')) throw new BadRequestException('Enlace inválido o vencido. Solicita otro desde tu perfil.');
     const result = await this.users.update({
+      deleted_at: IsNull(),
       verificacion_hash: createHash('sha256').update(token).digest('hex'),
       verificacion_expira: MoreThan(new Date()),
       correo_verificado: false,

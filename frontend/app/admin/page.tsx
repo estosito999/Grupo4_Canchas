@@ -328,7 +328,7 @@ export default function AdminPage() {
   const handleEliminar = async (u: Usuario) => {
     if (!u.id) return;
     const confirmado = window.confirm(
-      `¿Eliminar definitivamente a ${u.nombres} ${u.apellido_paterno}?`,
+      `¿Eliminar a ${u.nombres} ${u.apellido_paterno}? Sus datos se conservarán en el sistema, pero su cuenta dejará de estar disponible.`,
     );
     if (!confirmado) return;
 

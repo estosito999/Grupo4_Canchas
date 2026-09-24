@@ -75,6 +75,7 @@ export class UsersService {
     if (correo) {
       const duplicado = await this.userRepository.findOne({
         where: excluirId ? { correo, id: Not(excluirId) } : { correo },
+        withDeleted: true,
       });
       if (duplicado) {
         throw new ConflictException('El correo electrónico ya está registrado');
@@ -84,6 +85,7 @@ export class UsersService {
     if (celular) {
       const duplicado = await this.userRepository.findOne({
         where: excluirId ? { celular, id: Not(excluirId) } : { celular },
+        withDeleted: true,
       });
       if (duplicado) {
         throw new ConflictException('El número de celular ya está registrado');
@@ -455,7 +457,7 @@ export class UsersService {
       throw new BadRequestException('No puedes eliminar tu propia cuenta');
     }
     const usuario = await this.findEntityById(id);
-    await this.userRepository.remove(usuario);
+    await this.userRepository.softRemove(usuario);
     return { message: 'Usuario eliminado correctamente' };
   }
 }

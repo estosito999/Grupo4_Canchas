@@ -81,7 +81,7 @@ const EmpleadoPage: React.FC = () => {
     <div className="container mx-auto p-4 max-w-5xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Panel de Empleado - Directorio</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Directorio de Clientes</h1>
           <p className="text-sm text-slate-600">Búsqueda y actualización de datos de contacto de clientes.</p>
         </div>
         
