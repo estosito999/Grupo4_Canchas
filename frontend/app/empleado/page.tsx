@@ -79,7 +79,7 @@ const EmpleadoPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Directorio de Clientes</h1>
           <p className="text-sm text-slate-600">Búsqueda y actualización de datos de contacto de clientes.</p>
@@ -89,7 +89,7 @@ const EmpleadoPage: React.FC = () => {
         {usuario?.rol === 'ADMINISTRADOR' && (
           <button
             onClick={() => router.push('/admin')}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="motion-button bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             Volver a Panel Admin
           </button>
@@ -118,7 +118,7 @@ const EmpleadoPage: React.FC = () => {
           </thead>
           <tbody>
             {clients.map((client) => (
-              <tr key={client.id} className="hover:bg-slate-50 border-b last:border-0">
+              <tr key={client.id} className="hover:bg-slate-50 transition-colors border-b last:border-0">
                 <td className="py-3 px-4 font-medium text-slate-900">
                   {`${client.nombres} ${client.apellido_paterno || ''}`}
                 </td>
@@ -127,7 +127,7 @@ const EmpleadoPage: React.FC = () => {
                 <td className="py-3 px-4 text-center">
                   <button
                     onClick={() => setEditingClient(client)}
-                    className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold"
+                    className="motion-button px-3 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold"
                   >
                     Editar Info
                   </button>
@@ -147,7 +147,7 @@ const EmpleadoPage: React.FC = () => {
             {/* Modal de edición con permisos LIMITADOS (Sin rol, sin estado) */}
       {editingClient && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl">
+          <div className="motion-dialog bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl">
             <h2 className="text-lg font-bold mb-4 text-slate-900">Actualizar Contacto</h2>
             <form onSubmit={handleSaveClient} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -202,13 +202,13 @@ const EmpleadoPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingClient(null)}
-                  className="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600"
+                  className="motion-button px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700"
+                  className="motion-button px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700"
                 >
                   Actualizar
                 </button>

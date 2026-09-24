@@ -32,7 +32,7 @@ import { useAuth } from "@/components/lib/Navbar";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+  return <p className="motion-feedback mt-1 text-xs text-red-600">{message}</p>;
 }
 
 const inputClass =
@@ -382,14 +382,14 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={abrirCreacion}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            className="motion-button rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
           >
             + Agregar Usuario
           </button>
           <button
             type="button"
             onClick={() => router.push("/empleado")}
-            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-800"
+            className="motion-button rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-800"
           >
             Ver Directorio de Clientes
           </button>
@@ -397,12 +397,12 @@ export default function AdminPage() {
       </div>
 
       {errorGlobal && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="motion-feedback mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {errorGlobal}
         </div>
       )}
       {mensaje && (
-        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div role="status" className="motion-feedback mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           {mensaje}
         </div>
       )}
@@ -443,7 +443,7 @@ export default function AdminPage() {
                 return (
                   <tr
                     key={String(u.id)}
-                    className="border-b last:border-0 hover:bg-slate-50"
+                    className="border-b transition-colors last:border-0 hover:bg-slate-50"
                   >
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {`${u.nombres} ${u.apellido_paterno} ${u.apellido_materno}`}
@@ -489,7 +489,7 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => abrirEdicion(u)}
-                          className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                          className="motion-button rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
                         >
                           Editar
                         </button>
@@ -497,7 +497,7 @@ export default function AdminPage() {
                           type="button"
                           disabled={ocupado || propio}
                           onClick={() => void handleEstado(u)}
-                          className={`rounded-lg px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 ${
+                          className={`motion-button rounded-lg px-3 py-1 text-xs font-semibold text-white disabled:opacity-60 ${
                             bloqueado
                               ? "bg-emerald-600 hover:bg-emerald-700"
                               : "bg-amber-600 hover:bg-amber-700"
@@ -509,7 +509,7 @@ export default function AdminPage() {
                           type="button"
                           disabled={ocupado || propio}
                           onClick={() => void handleEliminar(u)}
-                          className="rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                          className="motion-button rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                         >
                           Eliminar
                         </button>
@@ -532,7 +532,7 @@ export default function AdminPage() {
       {/* RF07: modal de creación con TODOS los campos normalizados (RF01/RNF02) */}
       {isAddingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          <div className="motion-dialog max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold text-slate-900">
               Crear Nuevo Usuario
             </h2>
@@ -613,14 +613,14 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddingUser(false)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600"
+                  className="motion-button rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={ocupado}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                  className="motion-button rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                 >
                   {accionEnCurso === "crear" ? "Creando..." : "Crear Usuario"}
                 </button>
@@ -633,7 +633,7 @@ export default function AdminPage() {
       {/* RF07: modal de edición completa (datos, rol, estado y contraseña) */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+          <div className="motion-dialog max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold text-slate-900">
               Editar Usuario
             </h2>
@@ -717,14 +717,14 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600"
+                  className="motion-button rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={ocupado}
-                  className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+                  className="motion-button rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
                 >
                   {accionEnCurso === "editar" ? "Guardando..." : "Guardar Cambios"}
                 </button>

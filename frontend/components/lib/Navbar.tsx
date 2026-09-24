@@ -137,7 +137,8 @@ function NavLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+      aria-current={active ? "page" : undefined}
+      className={`motion-button rounded-lg px-3 py-2 text-sm font-medium transition ${
         active
           ? "bg-emerald-700 text-white"
           : "text-emerald-50 hover:bg-emerald-800 hover:text-white"
@@ -172,10 +173,10 @@ export default function Navbar() {
           : [];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-emerald-900/40 bg-emerald-950/95 text-white backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-lime-400 text-emerald-950">
+    <header className="sticky top-0 z-40 border-b border-emerald-900/40 bg-emerald-950/95 text-white shadow-sm backdrop-blur">
+      <nav aria-label="Navegación principal" className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <Link href="/" onClick={() => setOpen(false)} className="group flex items-center gap-2 rounded-lg font-semibold tracking-tight">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-lime-400 text-emerald-950 transition-transform duration-300 motion-safe:group-hover:-rotate-12 motion-safe:group-hover:scale-105">
             C
           </span>
           <span>
@@ -185,11 +186,17 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="inline-flex items-center rounded-lg border border-emerald-700 px-3 py-2 text-sm md:hidden"
+          className="motion-button inline-flex items-center gap-2 rounded-lg border border-emerald-700 px-3 py-2 text-sm md:hidden"
           aria-expanded={open}
-          aria-label="Abrir menú"
+          aria-controls="mobile-navigation"
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
           onClick={() => setOpen((value) => !value)}
         >
+          <span aria-hidden="true" className="relative h-4 w-4">
+            <span className={`absolute left-0 top-0.5 h-0.5 w-4 rounded-full bg-current transition-transform duration-200 motion-reduce:transition-none ${open ? "translate-y-1.5 rotate-45" : ""}`} />
+            <span className={`absolute left-0 top-2 h-0.5 w-4 rounded-full bg-current transition-opacity duration-200 motion-reduce:transition-none ${open ? "opacity-0" : "opacity-100"}`} />
+            <span className={`absolute left-0 top-3.5 h-0.5 w-4 rounded-full bg-current transition-transform duration-200 motion-reduce:transition-none ${open ? "-translate-y-1.5 -rotate-45" : ""}`} />
+          </span>
           Menú
         </button>
 
@@ -213,7 +220,7 @@ export default function Navbar() {
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-emerald-50 hover:bg-red-700 hover:text-white disabled:opacity-60"
+                className="motion-button rounded-lg px-3 py-2 text-sm font-medium text-emerald-50 hover:bg-red-700 hover:text-white disabled:opacity-60"
               >
                 {loggingOut ? "Cerrando..." : "Cerrar Sesión"}
               </button>
@@ -228,7 +235,7 @@ export default function Navbar() {
       </nav>
 
       {open && (
-        <div className="flex flex-col gap-1 border-t border-emerald-800 px-4 py-3 md:hidden">
+        <div id="mobile-navigation" className="motion-menu flex flex-col gap-1 border-t border-emerald-800 px-4 py-3 md:hidden">
           <NavLink href="/" onClick={() => setOpen(false)}>
             Inicio
           </NavLink>
@@ -256,7 +263,7 @@ export default function Navbar() {
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="rounded-lg px-3 py-2 text-left text-sm font-medium text-emerald-50 hover:bg-red-700"
+                className="motion-button rounded-lg px-3 py-2 text-left text-sm font-medium text-emerald-50 hover:bg-red-700 disabled:opacity-60"
               >
                 {loggingOut ? "Cerrando..." : "Cerrar Sesión"}
               </button>

@@ -1,0 +1,159 @@
+/* Shared motion is opt-in and leaves content usable without JavaScript. */
+.page-enter {
+  animation: page-enter 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal {
+  opacity: 1;
+}
+
+.reveal[data-reveal="pending"]:not(:focus-within) {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reveal[data-reveal="revealed"] {
+  animation: content-reveal 620ms cubic-bezier(0.22, 1, 0.36, 1)
+    var(--reveal-delay, 0ms) backwards;
+}
+
+.reveal[data-reveal="visible"],
+.reveal:focus-within {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+.motion-button {
+  transition:
+    translate 180ms ease,
+    scale 180ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+.motion-card {
+  transition:
+    translate 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .motion-button:hover:not(:disabled):not([aria-disabled="true"]) {
+    translate: 0 -2px;
+    box-shadow: 0 8px 20px -10px rgb(6 78 59 / 45%);
+  }
+
+  .motion-card:hover {
+    translate: 0 -5px;
+    box-shadow: 0 18px 40px -22px rgb(6 78 59 / 35%);
+  }
+}
+
+.motion-button:active:not(:disabled):not([aria-disabled="true"]) {
+  translate: 0 0;
+  scale: 0.98;
+}
+
+.motion-card:focus-within {
+  box-shadow: 0 14px 36px -22px rgb(6 78 59 / 35%);
+}
+
+.motion-feedback {
+  animation: feedback-enter 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.motion-dialog {
+  animation: dialog-enter 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.motion-menu {
+  transform-origin: top right;
+  animation: menu-enter 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-enter:focus-within {
+  animation: none;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes feedback-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .reveal,
+  .reveal[data-reveal],
+  .motion-button,
+  .motion-card,
+  .motion-feedback,
+  .motion-dialog,
+  .motion-menu {
+    animation: none;
+    transition: none;
+  }
+
+  .reveal[data-reveal="pending"]:not(:focus-within) {
+    opacity: 1;
+    transform: none;
+  }
+
+  .motion-button:hover:not(:disabled):not([aria-disabled="true"]),
+  .motion-button:active:not(:disabled):not([aria-disabled="true"]),
+  .motion-card:hover {
+    translate: none;
+    scale: none;
+  }
+}

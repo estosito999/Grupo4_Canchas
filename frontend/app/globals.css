@@ -17,3 +17,17 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+html {
+  scroll-padding-top: 6rem;
+}
+button:not(:disabled),
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled) {
+  cursor: pointer;
+}
+:is(a, button, input, select, textarea):focus-visible {
+  outline-offset: 3px;
+}
